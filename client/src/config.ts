@@ -1,0 +1,1 @@
+export const SERVER_URL = 'https://uno-project-54mo.onrender.com/';
