@@ -13,17 +13,20 @@ interface Props {
   deckCount: number;
   onDraw: () => void;
   canDraw: boolean;
+  onTopCardChange?: () => void;
 }
 
-export default function Table({ topCard, currentColor, deckCount, onDraw, canDraw }: Props) {
+export default function Table({ topCard, currentColor, deckCount, onDraw, canDraw, onTopCardChange }: Props) {
   const bounce = useRef(new Animated.Value(1)).current;
   const lastTopId = useRef<string | null>(null);
 
   useEffect(() => {
     if (topCard && topCard.id !== lastTopId.current) {
+      const isFirst = lastTopId.current === null;
       lastTopId.current = topCard.id;
       bounce.setValue(0.5);
       Animated.spring(bounce, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }).start();
+      if (!isFirst) onTopCardChange?.();
     }
   }, [topCard?.id]);
 
@@ -48,8 +51,8 @@ export default function Table({ topCard, currentColor, deckCount, onDraw, canDra
 }
 
 const styles = StyleSheet.create({
-  felt: { borderRadius: 28, marginHorizontal: 16, paddingVertical: 20, marginVertical: 8 },
-  container: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 40 },
+  felt: { borderRadius: 28, paddingVertical: 24, width: '100%' },
+  container: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 48 },
   deckArea: { alignItems: 'center' },
   deckCount: { color: '#dfe6e9', fontSize: 12, marginTop: 6 },
   discardArea: { alignItems: 'center' },

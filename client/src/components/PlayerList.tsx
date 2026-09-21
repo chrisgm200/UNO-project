@@ -2,9 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { PublicPlayer } from '../types';
 
-interface ChipProps { active: boolean; children: React.ReactNode; vertical: boolean }
-
-function PlayerChip({ active, children, vertical }: ChipProps) {
+function PlayerChip({ active, children }: { active: boolean; children: React.ReactNode }) {
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -20,10 +18,9 @@ function PlayerChip({ active, children, vertical }: ChipProps) {
   }, [active]);
 
   const borderColor = pulse.interpolate({ inputRange: [0, 1], outputRange: ['#F1C40F', '#fff8d6'] });
-  const base = vertical ? styles.chipVertical : styles.chip;
 
   return (
-    <Animated.View style={[base, active && styles.activeChip, active && { borderColor }]}>
+    <Animated.View style={[styles.chip, active && styles.activeChip, active && { borderColor }]}>
       {children}
     </Animated.View>
   );
@@ -33,15 +30,13 @@ interface Props {
   players: PublicPlayer[];
   currentPlayerIndex: number;
   mySocketId?: string;
-  layout?: 'row' | 'column';
 }
 
-export default function PlayerList({ players, currentPlayerIndex, mySocketId, layout = 'row' }: Props) {
-  const vertical = layout === 'column';
+export default function PlayerList({ players, currentPlayerIndex, mySocketId }: Props) {
   return (
-    <View style={vertical ? styles.containerVertical : styles.container}>
+    <View style={styles.container}>
       {players.map((p, i) => (
-        <PlayerChip key={p.id} active={i === currentPlayerIndex} vertical={vertical}>
+        <PlayerChip key={p.id} active={i === currentPlayerIndex}>
           <Text style={styles.name}>{p.name} {p.id === mySocketId ? '(Tú)' : ''}</Text>
           <Text style={styles.count}>{p.cardCount} 🂠</Text>
           {p.wins > 0 && <Text style={styles.wins}>🏆 {p.wins}</Text>}
@@ -54,10 +49,8 @@ export default function PlayerList({ players, currentPlayerIndex, mySocketId, la
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, padding: 12 },
-  containerVertical: { flexDirection: 'column', gap: 10, padding: 16, width: 200 },
+  container: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, paddingVertical: 12 },
   chip: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, paddingVertical: 8, paddingHorizontal: 14, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
-  chipVertical: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, alignItems: 'flex-start', borderWidth: 2, borderColor: 'transparent' },
   activeChip: { backgroundColor: 'rgba(241,196,15,0.12)' },
   name: { color: '#fff', fontWeight: '600' },
   count: { color: '#ccc', fontSize: 12 },
