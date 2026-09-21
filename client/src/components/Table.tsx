@@ -1,11 +1,11 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Card, CardColor } from '../types';
 import PlayingCard from './PlayingCard';
+import { theme } from '../theme';
 
-const COLOR_MAP: Record<string, string> = {
-  red: '#E74C3C', yellow: '#F1C40F', green: '#2ECC71', blue: '#3498DB', wild: '#2C2C2C',
-};
+const COLOR_DOT: Record<string, string> = { red: '#E74C3C', yellow: '#F1C40F', green: '#2ECC71', blue: '#3498DB', wild: '#2C2C2C' };
 
 interface Props {
   topCard: Card | null;
@@ -16,29 +16,42 @@ interface Props {
 }
 
 export default function Table({ topCard, currentColor, deckCount, onDraw, canDraw }: Props) {
-  return (
-    <View style={styles.container}>
-      <View style={styles.deckArea}>
-        <PlayingCard
-          card={{ id: 'deck', color: 'wild', value: 'wild' }}
-          onPress={canDraw ? onDraw : undefined}
-          disabled={!canDraw}
-        />
-        <Text style={styles.deckCount}>{deckCount} cartas</Text>
-      </View>
+  const bounce = useRef(new Animated.Value(1)).current;
+  const lastTopId = useRef<string | null>(null);
 
-      <View style={styles.discardArea}>
-        {topCard && <PlayingCard card={topCard} />}
-        <View style={[styles.colorIndicator, { backgroundColor: COLOR_MAP[currentColor] }]} />
+  useEffect(() => {
+    if (topCard && topCard.id !== lastTopId.current) {
+      lastTopId.current = topCard.id;
+      bounce.setValue(0.5);
+      Animated.spring(bounce, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }).start();
+    }
+  }, [topCard?.id]);
+
+  return (
+    <LinearGradient colors={theme.colors.table as any} style={styles.felt}>
+      <View style={styles.container}>
+        <View style={styles.deckArea}>
+          <PlayingCard card={{ id: 'deck', color: 'wild', value: 'wild' }} onPress={canDraw ? onDraw : undefined} disabled={!canDraw} />
+          <Text style={styles.deckCount}>{deckCount} cartas</Text>
+        </View>
+        <View style={styles.discardArea}>
+          {topCard && (
+            <Animated.View style={{ transform: [{ scale: bounce }] }}>
+              <PlayingCard card={topCard} />
+            </Animated.View>
+          )}
+          <View style={[styles.colorIndicator, { backgroundColor: COLOR_DOT[currentColor] }]} />
+        </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 40, paddingVertical: 24 },
+  felt: { borderRadius: 28, marginHorizontal: 16, paddingVertical: 20, marginVertical: 8 },
+  container: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 40 },
   deckArea: { alignItems: 'center' },
-  deckCount: { color: '#aaa', fontSize: 12, marginTop: 6 },
+  deckCount: { color: '#dfe6e9', fontSize: 12, marginTop: 6 },
   discardArea: { alignItems: 'center' },
-  colorIndicator: { width: 24, height: 24, borderRadius: 12, marginTop: 8, borderWidth: 2, borderColor: '#fff' },
+  colorIndicator: { width: 22, height: 22, borderRadius: 11, marginTop: 8, borderWidth: 2, borderColor: '#fff' },
 });
