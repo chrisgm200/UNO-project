@@ -10,14 +10,15 @@ export interface Card {
 }
 
 export interface Player {
-  id: string;       // socket.id
+  id: string;
   name: string;
   hand: Card[];
   connected: boolean;
   saidUno: boolean;
+  wins: number; // ← nuevo
 }
 
-export type GamePhase = 'WAITING_PLAYERS' | 'PLAYING' | 'CHOOSING_COLOR' | 'GAME_OVER';
+export type GamePhase = 'WAITING_PLAYERS' | 'PLAYING' | 'CHOOSING_COLOR' | 'GAME_OVER' | 'SERIES_OVER';
 
 export interface GameState {
   roomId: string;
@@ -29,16 +30,17 @@ export interface GameState {
   currentColor: Exclude<CardColor, 'wild'>;
   phase: GamePhase;
   winnerId: string | null;
-  pendingDrawCount: number; // acumulado por +2 encadenados de la misma familia (sin apilar entre +2 y +4)
+  pendingDrawCount: number;
+  rematchVotes: Record<string, boolean>; // ← nuevo: playerId -> acepta revancha
 }
 
-// Estado "público" que se envía al cliente (oculta las manos de los demás)
 export interface PublicPlayer {
   id: string;
   name: string;
   cardCount: number;
   connected: boolean;
   saidUno: boolean;
+  wins: number; // ← nuevo
 }
 
 export interface PublicGameState {
@@ -52,9 +54,9 @@ export interface PublicGameState {
   phase: GamePhase;
   winnerId: string | null;
   deckCount: number;
+  rematchAccepted: string[]; // ← nuevo: ids que ya aceptaron revancha
 }
 
-// Eventos Cliente -> Servidor
 export interface ClientToServerEvents {
   createRoom: (playerName: string, cb: (roomId: string) => void) => void;
   joinRoom: (data: { roomId: string; playerName: string }, cb: (ok: boolean, error?: string) => void) => void;
@@ -63,9 +65,9 @@ export interface ClientToServerEvents {
   drawCard: (roomId: string) => void;
   sayUno: (roomId: string) => void;
   leaveRoom: (roomId: string) => void;
+  voteRematch: (data: { roomId: string; accept: boolean }) => void; // ← nuevo
 }
 
-// Eventos Servidor -> Cliente
 export interface ServerToClientEvents {
   stateUpdate: (state: PublicGameState) => void;
   errorMessage: (msg: string) => void;

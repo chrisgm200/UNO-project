@@ -104,4 +104,12 @@ export function registerSocketHandlers(
     }
     RoomManager.cleanupEmptyRooms();
   });
+  
+  socket.on('voteRematch', ({ roomId, accept }) => {
+  let state = RoomManager.getRoom(roomId);
+  if (!state) return;
+  state = GameEngine.voteRematch(state, socket.id, accept);
+  RoomManager.setRoom(roomId, state);
+  broadcastState(io, roomId);
+  });
 }

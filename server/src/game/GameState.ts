@@ -1,4 +1,4 @@
-import { GameState, Player, PublicGameState } from '../types';
+import { GameState, PublicGameState } from '../types';
 import { buildFullDeck } from './Deck';
 
 export function createInitialState(roomId: string): GameState {
@@ -13,10 +13,10 @@ export function createInitialState(roomId: string): GameState {
     phase: 'WAITING_PLAYERS',
     winnerId: null,
     pendingDrawCount: 0,
+    rematchVotes: {}, // ← nuevo
   };
 }
 
-// Convierte el estado interno en la versión "segura" para un jugador específico
 export function toPublicState(state: GameState, forPlayerId: string): PublicGameState {
   const me = state.players.find((p) => p.id === forPlayerId);
 
@@ -28,6 +28,7 @@ export function toPublicState(state: GameState, forPlayerId: string): PublicGame
       cardCount: p.hand.length,
       connected: p.connected,
       saidUno: p.saidUno,
+      wins: p.wins, // ← nuevo
     })),
     myHand: me ? me.hand : [],
     topCard: state.discardPile[state.discardPile.length - 1] ?? null,
@@ -37,5 +38,6 @@ export function toPublicState(state: GameState, forPlayerId: string): PublicGame
     phase: state.phase,
     winnerId: state.winnerId,
     deckCount: state.deck.length,
+    rematchAccepted: Object.keys(state.rematchVotes).filter((id) => state.rematchVotes[id]), // ← nuevo
   };
 }
