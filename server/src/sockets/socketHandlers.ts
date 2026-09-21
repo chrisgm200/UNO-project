@@ -54,13 +54,22 @@ export function registerSocketHandlers(
     }
   });
 
-  socket.on('playCard', ({ roomId, cardId, chosenColor }) => {
+    socket.on('playCard', ({ roomId, cardId, chosenColor }) => {
     try {
       let state = RoomManager.getRoom(roomId);
       if (!state) return;
+
+      const before = state.players.find((p) => p.id === socket.id);
+      const beforeCount = before ? before.hand.length : 0;
+
       state = GameEngine.playCard(state, socket.id, cardId, chosenColor);
       RoomManager.setRoom(roomId, state);
       broadcastState(io, roomId);
+
+      const after = state.players.find((p) => p.id === socket.id);
+      if (after && state.phase === 'PLAYING' && after.hand.length > beforeCount - 1) {
+        io.to(socket.id).emit('errorMessage', '¡Olvidaste decir UNO! Recibes 2 cartas de penalización.');
+      }
 
       if (state.phase === 'GAME_OVER' && state.winnerId) {
         const winner = state.players.find((p) => p.id === state.winnerId);
@@ -104,7 +113,7 @@ export function registerSocketHandlers(
     }
     RoomManager.cleanupEmptyRooms();
   });
-  
+
   socket.on('voteRematch', ({ roomId, accept }) => {
   let state = RoomManager.getRoom(roomId);
   if (!state) return;

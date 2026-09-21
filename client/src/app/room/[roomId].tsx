@@ -11,6 +11,7 @@ import Hand from '../../components/Hand';
 import Table from '../../components/Table';
 import PlayerList from '../../components/PlayerList';
 import ColorPickerModal from '../../components/ColorPickerModal';
+import { useResponsiveScale } from '../../hooks/useResponsiveScale';
 
 export default function Room() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function Room() {
   const [pendingCard, setPendingCard] = useState<Card | null>(null);
   const hasJoinedRef = useRef(false);
   const wasPlaying = useRef(false);
-
+  const scale = useResponsiveScale();
   useEffect(() => {
     if (!isCreator && playerName && !hasJoinedRef.current) {
       hasJoinedRef.current = true;
@@ -92,8 +93,8 @@ export default function Room() {
         </View>
       </View>
 
-      <View style={styles.centeredColumn}>
-        <PlayerList players={state.players} currentPlayerIndex={state.currentPlayerIndex} mySocketId={mySocketId} />
+      <View style={[styles.centeredColumn, { maxWidth: 720 * scale, gap: 16 * scale }]}>
+        <PlayerList players={state.players} currentPlayerIndex={state.currentPlayerIndex} mySocketId={mySocketId} scale={scale} />
 
         {state.phase === 'WAITING_PLAYERS' && (
           <View style={styles.center}>
@@ -115,10 +116,11 @@ export default function Room() {
               onDraw={handleDraw}
               canDraw={isMyTurn}
               onTopCardChange={playCardSound}
+              scale={scale}
             />
             <Text style={styles.turnIndicator}>{isMyTurn ? 'Tu turno' : `Turno de ${state.players[state.currentPlayerIndex]?.name}`}</Text>
             {isMyTurn && myHandSize === 2 && (
-              <TouchableOpacity style={styles.unoButton} onPress={() => sayUno(roomId)}>
+              <TouchableOpacity style={styles.unoButton} onPress={() => { playClickSound(); sayUno(roomId); }}>
                 <Text style={styles.buttonText}>¡Decir UNO!</Text>
               </TouchableOpacity>
             )}
@@ -164,8 +166,8 @@ export default function Room() {
       </View>
 
       {state.phase === 'PLAYING' && (
-        <View style={styles.handWrap}>
-          <Hand hand={state.myHand} topCard={state.topCard} currentColor={state.currentColor} isMyTurn={isMyTurn} onPlay={handlePlay} />
+        <View style={[styles.handWrap, { maxWidth: 720 * scale }]}>
+          <Hand hand={state.myHand} topCard={state.topCard} currentColor={state.currentColor} isMyTurn={isMyTurn} onPlay={handlePlay} scale={scale} />
           <ColorPickerModal visible={!!pendingCard} onSelect={handleColorChosen} />
         </View>
       )}

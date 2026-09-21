@@ -87,10 +87,20 @@ export class GameEngine {
       const withWin = players.map((p) => (p.id === playerId ? { ...p, wins: p.wins + 1 } : p));
       return { ...newState, players: withWin, phase: 'GAME_OVER', winnerId: playerId, rematchVotes: {} };
     }
-
+    const afterEffect = this.applyCardEffect(newState, card);
     return this.applyCardEffect(newState, card);
   }
+  // Si el jugador se quedó con 1 carta y nunca dijo UNO, penalización de +2
+  private static checkUnoPenalty(state: GameState, playerId: string): GameState {
+    const player = state.players.find((p) => p.id === playerId);
+    if (!player || player.hand.length !== 1 || player.saidUno) return state;
 
+    const { drawn, deck, discardPile } = drawCards(state.deck, state.discardPile, 2);
+    const players = state.players.map((p) =>
+      p.id === playerId ? { ...p, hand: [...p.hand, ...drawn], saidUno: false } : p
+    );
+    return { ...state, players, deck, discardPile };
+}
   private static applyCardEffect(state: GameState, card: Card): GameState {
     let next = { ...state };
     switch (card.value) {
@@ -140,10 +150,10 @@ export class GameEngine {
     return this.advanceTurn({ ...state, players, deck, discardPile }, 1);
   }
 
-  static sayUno(state: GameState, playerId: string): GameState {
+    static sayUno(state: GameState, playerId: string): GameState {
     return {
       ...state,
-      players: state.players.map((p) => (p.id === playerId && p.hand.length === 1 ? { ...p, saidUno: true } : p)),
+      players: state.players.map((p) => (p.id === playerId ? { ...p, saidUno: true } : p)),
     };
   }
 

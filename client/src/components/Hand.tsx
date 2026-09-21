@@ -14,6 +14,7 @@ interface Props {
   currentColor: CardColor;
   isMyTurn: boolean;
   onPlay: (card: Card) => void;
+  scale: number;
 }
 
 export default function Hand({ hand, topCard, currentColor, isMyTurn, onPlay }: Props) {

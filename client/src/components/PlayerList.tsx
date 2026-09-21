@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 import { PublicPlayer } from '../types';
 
-function PlayerChip({ active, children }: { active: boolean; children: React.ReactNode }) {
+function PlayerChip({ active, scale, children }: { active: boolean; scale: number; children: React.ReactNode }) {
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -20,7 +20,11 @@ function PlayerChip({ active, children }: { active: boolean; children: React.Rea
   const borderColor = pulse.interpolate({ inputRange: [0, 1], outputRange: ['#F1C40F', '#fff8d6'] });
 
   return (
-    <Animated.View style={[styles.chip, active && styles.activeChip, active && { borderColor }]}>
+    <Animated.View style={{
+      backgroundColor: active ? 'rgba(241,196,15,0.12)' : 'rgba(255,255,255,0.06)',
+      borderRadius: 14 * scale, paddingVertical: 8 * scale, paddingHorizontal: 14 * scale,
+      alignItems: 'center', borderWidth: 2, borderColor: active ? borderColor : 'transparent',
+    }}>
       {children}
     </Animated.View>
   );
@@ -30,31 +34,21 @@ interface Props {
   players: PublicPlayer[];
   currentPlayerIndex: number;
   mySocketId?: string;
+  scale?: number;
 }
 
-export default function PlayerList({ players, currentPlayerIndex, mySocketId }: Props) {
+export default function PlayerList({ players, currentPlayerIndex, mySocketId, scale = 1 }: Props) {
   return (
-    <View style={styles.container}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 * scale, paddingVertical: 12 * scale }}>
       {players.map((p, i) => (
-        <PlayerChip key={p.id} active={i === currentPlayerIndex}>
-          <Text style={styles.name}>{p.name} {p.id === mySocketId ? '(Tú)' : ''}</Text>
-          <Text style={styles.count}>{p.cardCount} 🂠</Text>
-          {p.wins > 0 && <Text style={styles.wins}>🏆 {p.wins}</Text>}
-          {!p.connected && <Text style={styles.disconnected}>desconectado</Text>}
-          {p.saidUno && <Text style={styles.uno}>¡UNO!</Text>}
+        <PlayerChip key={p.id} active={i === currentPlayerIndex} scale={scale}>
+          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 * scale }}>{p.name} {p.id === mySocketId ? '(Tú)' : ''}</Text>
+          <Text style={{ color: '#ccc', fontSize: 12 * scale }}>{p.cardCount} 🂠</Text>
+          {p.wins > 0 && <Text style={{ color: '#F1C40F', fontSize: 11 * scale, fontWeight: 'bold' }}>🏆 {p.wins}</Text>}
+          {!p.connected && <Text style={{ color: '#E74C3C', fontSize: 10 * scale }}>desconectado</Text>}
+          {p.saidUno && <Text style={{ color: '#F1C40F', fontSize: 11 * scale, fontWeight: 'bold' }}>¡UNO!</Text>}
         </PlayerChip>
       ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, paddingVertical: 12 },
-  chip: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, paddingVertical: 8, paddingHorizontal: 14, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
-  activeChip: { backgroundColor: 'rgba(241,196,15,0.12)' },
-  name: { color: '#fff', fontWeight: '600' },
-  count: { color: '#ccc', fontSize: 12 },
-  wins: { color: '#F1C40F', fontSize: 11, fontWeight: 'bold' },
-  disconnected: { color: '#E74C3C', fontSize: 10 },
-  uno: { color: '#F1C40F', fontSize: 11, fontWeight: 'bold' },
-});
